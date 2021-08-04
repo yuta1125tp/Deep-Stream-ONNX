@@ -24,10 +24,10 @@
 
 // This is just the function prototype. The definition is written at the end of the file.
 extern "C" bool NvDsInferParseCustomYoloV2Tiny(
-    std::vector<NvDsInferLayerInfo> const& outputLayersInfo,
-    NvDsInferNetworkInfo const& networkInfo,
-    NvDsInferParseDetectionParams const& detectionParams,
-    std::vector<NvDsInferParseObjectInfo>& objectList);
+    std::vector<NvDsInferLayerInfo> const &outputLayersInfo,
+    NvDsInferNetworkInfo const &networkInfo,
+    NvDsInferParseDetectionParams const &detectionParams,
+    std::vector<NvDsInferParseObjectInfo> &objectList);
 
 /**
  * Bounds values between the range [minVal, maxVal].
@@ -64,7 +64,7 @@ static unsigned clamp(const uint val, const uint minVal, const uint maxVal)
  * @return Overlap between the two lines as a float value.
  */
 static float overlap1D(float x1min, float x1max, float x2min, float x2max)
-{   
+{
     if (x1min > x2min)
     {
         std::swap(x1min, x2min);
@@ -88,12 +88,10 @@ static float overlap1D(float x1min, float x1max, float x2min, float x2max)
  * 
  * @return IoU between the two bounding boxes as a float value.
  */
-static float computeIoU(const NvDsInferParseObjectInfo& bbox1, const NvDsInferParseObjectInfo& bbox2)
+static float computeIoU(const NvDsInferParseObjectInfo &bbox1, const NvDsInferParseObjectInfo &bbox2)
 {
-    float overlapX
-        = overlap1D(bbox1.left, bbox1.left + bbox1.width, bbox2.left, bbox2.left + bbox2.width);
-    float overlapY
-        = overlap1D(bbox1.top, bbox1.top + bbox1.height, bbox2.top, bbox2.top + bbox2.height);
+    float overlapX = overlap1D(bbox1.left, bbox1.left + bbox1.width, bbox2.left, bbox2.left + bbox2.width);
+    float overlapY = overlap1D(bbox1.top, bbox1.top + bbox1.height, bbox2.top, bbox2.top + bbox2.height);
     float area1 = (bbox1.width) * (bbox1.height);
     float area2 = (bbox2.width) * (bbox2.height);
     float overlap2D = overlapX * overlapY;
@@ -113,7 +111,7 @@ static float computeIoU(const NvDsInferParseObjectInfo& bbox1, const NvDsInferPa
  * 
  * @return Boolean value indicating whether confidence of bbox1 is greater than confidence of bbox2.
  */
-static bool compareBBoxConfidence(const NvDsInferParseObjectInfo& bbox1, const NvDsInferParseObjectInfo& bbox2)
+static bool compareBBoxConfidence(const NvDsInferParseObjectInfo &bbox1, const NvDsInferParseObjectInfo &bbox2)
 {
     return bbox1.detectionConfidence > bbox2.detectionConfidence;
 }
@@ -131,9 +129,9 @@ static bool compareBBoxConfidence(const NvDsInferParseObjectInfo& bbox1, const N
  * 
  * @return NvDsInferParseObjectInfo Bounding Box object.
  */
-static NvDsInferParseObjectInfo createBBox(const float& bx, const float& by, const float& bw,
-                                     const float& bh, const int& stride, const uint& netW,
-                                     const uint& netH)
+static NvDsInferParseObjectInfo createBBox(const float &bx, const float &by, const float &bw,
+                                           const float &bh, const int &stride, const uint &netW,
+                                           const uint &netH)
 {
     NvDsInferParseObjectInfo bbox;
     // Restore coordinates to network input resolution
@@ -173,11 +171,12 @@ static NvDsInferParseObjectInfo createBBox(const float& bx, const float& by, con
  * @param [bboxInfo] std::vector of bounding boxes.
  */
 static void addBBoxProposal(const float bx, const float by, const float bw, const float bh,
-                     const uint stride, const uint& netW, const uint& netH, const int maxIndex,
-                     const float maxProb, std::vector<NvDsInferParseObjectInfo>& bboxInfo)
+                            const uint stride, const uint &netW, const uint &netH, const int maxIndex,
+                            const float maxProb, std::vector<NvDsInferParseObjectInfo> &bboxInfo)
 {
     NvDsInferParseObjectInfo bbox = createBBox(bx, by, bw, bh, stride, netW, netH);
-    if (((bbox.left + bbox.width) > netW) || ((bbox.top + bbox.height) > netH)) return;
+    if (((bbox.left + bbox.width) > netW) || ((bbox.top + bbox.height) > netH))
+        return;
 
     bbox.detectionConfidence = maxProb;
     bbox.classId = maxIndex;
@@ -216,7 +215,8 @@ nonMaximumSuppression(std::vector<NvDsInferParseObjectInfo> inputBBoxInfo, const
             else
                 break;
         }
-        if (keep) outputBBoxInfo.push_back(bbox1);
+        if (keep)
+            outputBBoxInfo.push_back(bbox1);
     }
     return outputBBoxInfo;
 }
@@ -234,10 +234,10 @@ nonMaximumSuppression(std::vector<NvDsInferParseObjectInfo> inputBBoxInfo, const
  */
 
 static std::vector<NvDsInferParseObjectInfo>
-nmsAllClasses(std::vector<NvDsInferParseObjectInfo>& bboxInfo, const uint numClasses, const float nmsThresh)
+nmsAllClasses(std::vector<NvDsInferParseObjectInfo> &bboxInfo, const uint numClasses, const float nmsThresh)
 {
     std::vector<NvDsInferParseObjectInfo> resultBBoxes;
-    
+
     // std::vector of std::vector (of size numClasses) to hold classwise bounding boxes.
     std::vector<std::vector<NvDsInferParseObjectInfo>> splitBoxes(numClasses);
 
@@ -280,7 +280,7 @@ nmsAllClasses(std::vector<NvDsInferParseObjectInfo>& bboxInfo, const uint numCla
 
 static std::vector<NvDsInferParseObjectInfo>
 decodeYoloV2Tensor(
-    const float* detections, const uint& netW, const uint& netH, 
+    const float *detections, const uint &netW, const uint &netH,
     const std::vector<float> &anchors, const uint numBBoxes,
     const uint gridSize, const uint stride, const float probThresh,
     const uint numOutputClasses)
@@ -292,7 +292,7 @@ decodeYoloV2Tensor(
     {
         for (uint x = 0; x < gridSize; ++x)
         {
-	    const int xy_offset = (y * gridSize + x);
+            const int xy_offset = (y * gridSize + x);
 
             for (uint b = 0; b < numBBoxes; ++b)
             {
@@ -300,27 +300,20 @@ decodeYoloV2Tensor(
                 const float ph = anchors[b * 2 + 1];
 
                 const int start_idx = xy_offset + b_offset * b * (5 + numOutputClasses);
-        
-                const float sigmoid_tx 
-                    = 1 / (1 + exp (-detections[start_idx + 0 * b_offset]));
-                const float sigmoid_ty 
-                    = 1 / (1 + exp (-detections[start_idx + 1 * b_offset]));
-                const float bx
-                    = x + sigmoid_tx;
-                const float by 
-                    = y + sigmoid_ty;
-                const float bw
-                    = pw * exp (detections[start_idx + 2 * b_offset]);
-                const float bh
-                    = ph * exp (detections[start_idx + 3 * b_offset]);
-                const float objectness
-                    = 1 / (1 + exp(-detections[start_idx + 4 * b_offset]));
+
+                const float sigmoid_tx = 1 / (1 + exp(-detections[start_idx + 0 * b_offset]));
+                const float sigmoid_ty = 1 / (1 + exp(-detections[start_idx + 1 * b_offset]));
+                const float bx = x + sigmoid_tx;
+                const float by = y + sigmoid_ty;
+                const float bw = pw * exp(detections[start_idx + 2 * b_offset]);
+                const float bh = ph * exp(detections[start_idx + 3 * b_offset]);
+                const float objectness = 1 / (1 + exp(-detections[start_idx + 4 * b_offset]));
 
                 int maxIndex = -1;
                 float maxProb = 0.0f;
                 float max_class_val = 0.0f;
 
-                // Finding the maximum value and well as the index with maximum value 
+                // Finding the maximum value and well as the index with maximum value
                 // prior to applying softmax. Since softmax is monotonically increasing,
                 // maxIndex can be calculated here itself.
                 for (uint i = 0; i < numOutputClasses; ++i)
@@ -335,21 +328,21 @@ decodeYoloV2Tensor(
                 }
 
                 float sum_exp = 0.0f;
-                // Calculating the denominator of the softmax function. Note that, we are 
-                // performing softmax(x - max(x)) where x is the list of class outputs. 
-                // Note that softmax(x + a) gives the same result as softmax(x) where, a is 
-                // a constant value. By replacing a with -max(x) softmax becomes more 
+                // Calculating the denominator of the softmax function. Note that, we are
+                // performing softmax(x - max(x)) where x is the list of class outputs.
+                // Note that softmax(x + a) gives the same result as softmax(x) where, a is
+                // a constant value. By replacing a with -max(x) softmax becomes more
                 // stable since exp does not have to deal with large numbers.
                 for (uint i = 0; i < numOutputClasses; ++i)
                 {
                     float class_val = detections[start_idx + (5 + i) * b_offset];
-                    float class_exp = exp(class_val - max_class_val); 
+                    float class_exp = exp(class_val - max_class_val);
                     sum_exp = sum_exp + class_exp;
                 }
 
-                // The largest softmax probability among all x values will be softmax(max(x)) 
-                // since softmax is monotonically increasing. Since we are actually calculating 
-                // softmax(x_i - max(x)), when x_i = max(x), we get softmax(max(x) - max(x)), 
+                // The largest softmax probability among all x values will be softmax(max(x))
+                // since softmax is monotonically increasing. Since we are actually calculating
+                // softmax(x_i - max(x)), when x_i = max(x), we get softmax(max(x) - max(x)),
                 // which is just 1 / sum_exp.
                 float max_softmax_prob = 1 / sum_exp;
                 maxProb = objectness * max_softmax_prob;
@@ -363,7 +356,6 @@ decodeYoloV2Tensor(
     }
     return bboxInfo;
 }
-
 
 /**
  * Function expected by DeepStream for decoding the TinyYOLOv2 output.
@@ -382,27 +374,27 @@ decodeYoloV2Tensor(
 
 /* C-linkage to prevent name-mangling */
 extern "C" bool NvDsInferParseCustomYoloV2Tiny(
-    std::vector<NvDsInferLayerInfo> const& outputLayersInfo,
-    NvDsInferNetworkInfo const& networkInfo,
-    NvDsInferParseDetectionParams const& detectionParams,
-    std::vector<NvDsInferParseObjectInfo>& objectList)
+    std::vector<NvDsInferLayerInfo> const &outputLayersInfo,
+    NvDsInferNetworkInfo const &networkInfo,
+    NvDsInferParseDetectionParams const &detectionParams,
+    std::vector<NvDsInferParseObjectInfo> &objectList)
 {
-    
+
     // Initializing some parameters.
 
     /**
      * In our case, we know stride and gridSize beforehand. If this is
      * not the case, they can be calculated using the following formulae:
      * 
-     * const uint gridSize = layer.dims.d[1];
+     * const uint gridSize = layer.inferDims.d[1];
      * const uint stride = networkInfo.width / gridSize;
      */
 
-    static const uint kSTRIDE           = 32;
-    static const uint kGRID_SIZE        = 13;
-    static const uint kNUM_ANCHORS      = 5;
-    static const float kNMS_THRESH      = 0.2f;
-    static const float kPROB_THRESH     = 0.6f;
+    static const uint kSTRIDE = 32;
+    static const uint kGRID_SIZE = 13;
+    static const uint kNUM_ANCHORS = 5;
+    static const float kNMS_THRESH = 0.2f;
+    static const float kPROB_THRESH = 0.6f;
     static const uint kNUM_CLASSES_YOLO = 20;
 
     /**
@@ -415,11 +407,12 @@ extern "C" bool NvDsInferParseCustomYoloV2Tiny(
     static const std::vector<float> kANCHORS = {
         34.56, 38.08, 109.44, 141.12,
         212.16, 364.16, 301.44, 163.52,
-        531.84, 336.64 };
+        531.84, 336.64};
 
     // Some assertions and error checking.
-    if (outputLayersInfo.empty()) {
-        std::cerr << "Could not find output layer in bbox parsing" << std::endl;;
+    if (outputLayersInfo.empty())
+    {
+        std::cerr << "Could not find output layer in bbox parsing" << std::endl;
         return false;
     }
 
@@ -429,18 +422,17 @@ extern "C" bool NvDsInferParseCustomYoloV2Tiny(
                   << detectionParams.numClassesConfigured
                   << ", detected by network: " << kNUM_CLASSES_YOLO << std::endl;
     }
-    
+
     // Obtaining the output layer.
     const NvDsInferLayerInfo &layer = outputLayersInfo[0];
-    assert (layer.dims.numDims == 3);
-	
+    assert(layer.inferDims.numDims == 3);
+
     // Decoding the output tensor of TinyYOLOv2 to the NvDsInferParseObjectInfo format.
     std::vector<NvDsInferParseObjectInfo> objects =
         decodeYoloV2Tensor(
-        (const float*)(layer.buffer), networkInfo.width, networkInfo.height, 
-        kANCHORS, kNUM_ANCHORS, kGRID_SIZE, kSTRIDE, kPROB_THRESH,
-        kNUM_CLASSES_YOLO  
-        );
+            (const float *)(layer.buffer), networkInfo.width, networkInfo.height,
+            kANCHORS, kNUM_ANCHORS, kGRID_SIZE, kSTRIDE, kPROB_THRESH,
+            kNUM_CLASSES_YOLO);
 
     // Applying Non Maximum Suppression to remove multiple detections of the same object.
     objectList.clear();
