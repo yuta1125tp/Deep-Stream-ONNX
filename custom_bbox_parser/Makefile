@@ -1,7 +1,7 @@
 CUDA_VER:=10
-SRCFILES:=nvdsparsebbox_tiny_yolo.cpp
-TARGET_LIB:=libnvdsinfer_custom_bbox_tiny_yolo.so
-DEEPSTREAM_PATH:=/home/nano/deepstream_sdk_v4.0_jetson
+SRCFILES:=$(wildcard *.cpp)
+TARGET_LIB:=$(addprefix lib, $(notdir $(SRCFILES:.cpp=.so)))
+DEEPSTREAM_PATH:=/opt/nvidia/deepstream/deepstream-5.1
 
 ifeq ($(CUDA_VER),)
   $(error "CUDA_VER is not set")
